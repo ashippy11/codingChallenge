@@ -3,8 +3,6 @@
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -80,29 +78,10 @@ public class SequenceOptimizerTests {
 		assertEquals(bestSequence, optimizer.makeBestSwap(testSequence2));		
 	}
 	
-	/*
 	@Test
-	public void getPossibleSwapsTest() throws Exception {
+	public void getTotalProductionTime() throws Exception {
 
-		HashMap<ArrayList<String>,Integer> possibleSwaps = new HashMap<ArrayList<String>,Integer>();
-		ArrayList<String> firstSwapList = new ArrayList<String>();
-		firstSwapList.add("B");
-		firstSwapList.add("A");
-		firstSwapList.add("C");
-		possibleSwaps.put(firstSwapList, 38);
-		ArrayList<String> secondSwapList = new ArrayList<String>();
-		secondSwapList.add("A");
-		secondSwapList.add("C");
-		secondSwapList.add("B");
-		possibleSwaps.put(secondSwapList, 35);
-		
-		assertEquals(possibleSwaps, optimizer.getPossibleSwaps(testSequence));		
+		assertEquals(168, optimizer.getTotalProductionTime(testSequence1));		
 	}
-	*/
 	
-	@Test
-	public void getProductionTimeTest() throws Exception {
-
-		assertEquals(168, optimizer.getProductionTime(testSequence1));		
-	}
 }
