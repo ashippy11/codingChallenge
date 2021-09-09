@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class SequenceOptmizer{
+	
 	/*
 	Change Over Matrix is represented as a Hashmap of Hashmaps so that you can easily look up a Product to another Product and get the change over time
 	For example if you want to find the change over from product A to product B you would use 'changeOverMatrix.get(A).get(B)'
@@ -13,61 +14,82 @@ public class SequenceOptmizer{
 	//HashMap where the Product is the key and the time it takes to produce that product is the value
 	HashMap<String, Integer> timeToProduce = new HashMap<String, Integer>();
 	
-	//Continue to make improving swaps until no more improvements can be found
-	public List<String> makeSwaps(ArrayList<String> sequence) {
+	
+	//Continue to making improving swaps greedily until no more improvements can be found
+	public ArrayList<String> makeSwaps(ArrayList<String> sequence) {
+		
 		while(makeBestSwap(sequence)!=sequence) {
 			sequence = makeBestSwap(sequence);
 		}
 		return sequence;
 	}
 	
-	//Loop through all the possible swaps for a given sequence and make the swap that has the lowest time;
-	public ArrayList<String> makeBestSwap(ArrayList<String> currentSequence){
-		HashMap<ArrayList<String>,Integer> possibleSwaps = getPossibleSwaps(currentSequence);
-		ArrayList<String> bestSequence = currentSequence;
-		int bestTime = getProductionTime(currentSequence);
-		//find the sequence with the smallest production time and return that sequence
-		for(ArrayList<String> seq: possibleSwaps.keySet()) {
-			if(possibleSwaps.get(seq)<bestTime) {
-				bestTime = possibleSwaps.get(seq);
-				bestSequence = seq;
+	//Loop through all the possible adjacent swaps for a given sequence, updating the sequence when an order is found with a lower change-over time
+	public ArrayList<String> makeBestSwap(ArrayList<String> sequence){
+		int currentTime = getChangeOverTime(sequence);
+		ArrayList<String> bestSequence = sequence;
+		int bestTime = currentTime;
+		for(int i = 0; i<=sequence.size()-2; i++) {
+			ArrayList<String> sequenceCopy = new ArrayList<>(sequence);
+			int newTime = updateChangeOverTime(currentTime, i, sequenceCopy);
+			if(newTime<bestTime) {
+				Collections.swap(sequenceCopy, i, i+1);
+				bestTime = newTime;
+				bestSequence = sequenceCopy;
 			}
 		}
 		return bestSequence;
 	}
-	
-	/* Method returns possibleSwaps which is a Hashmap where the keys are ArrayLists 
-	 * representing all of the possible sequences after making one adjacent swap
-	 * and the value is the production time of that sequence
+	/* Method takes the current time the sequence passed to it takes to complete and removes the change-overs that would no longer be in needed
+	 * after the swaps are made and adds the new change-overs that will be needed. If the swap was not made on the very first two elements
+	 * or very last two elements swapping two adjacent products will result in 3 new change-overs
+	 * By only updating the changeOverMatrix of the products whose changeOver times are being updated, we save looping through the entire
+	 * product array and recalculating change overs that are not changing. 
 	 */
-	public HashMap<ArrayList<String>,Integer> getPossibleSwaps(ArrayList<String> sequence){
-		HashMap<ArrayList<String>,Integer> possibleSwaps = new HashMap<ArrayList<String>,Integer>();
-		for(int i = 1; i<=sequence.size()-1; i++) {
-			ArrayList<String> sequenceCopy = new ArrayList<>(sequence);
-			Collections.swap(sequenceCopy, i, i-1);
-			possibleSwaps.put(sequenceCopy, getProductionTime(sequenceCopy));
+	public int updateChangeOverTime(int current, int i, ArrayList<String> seq){
+		
+		int centerPair = changeOverMatrix.get(seq.get(i)).get(seq.get(i+1));
+		int swappedCenterPair = changeOverMatrix.get(seq.get(i+1)).get(seq.get(i));
+		current = current- centerPair + swappedCenterPair;
+		//Check that first two products weren't swapped
+		if(i>0) {
+			int leftPair = changeOverMatrix.get(seq.get(i-1)).get(seq.get(i));
+			int swappedleftPair = changeOverMatrix.get(seq.get(i-1)).get(seq.get(i+1));
+			current = current- leftPair + swappedleftPair;
+		}
+		//Check the last two products weren't swapped
+		if(i<seq.size()-2) {
+			int rightPair= changeOverMatrix.get(seq.get(i+1)).get(seq.get(i+2));
+			int swappedRightPair = changeOverMatrix.get(seq.get(i)).get(seq.get(i+2));
+			current = current- rightPair + swappedRightPair;
 		}
 		
-		return possibleSwaps;
+		return current;
+	}
+
+	//Calculates and returns the total change over time for all the products for a given sequence
+	public int getChangeOverTime(List<String> sequence) {
+		
+		int totalChangeOverTime = 0;
+		
+		for(int i=0; i<=sequence.size()-2; i++) {
+			int changeOverTime = changeOverMatrix.get(sequence.get(i)).get(sequence.get(i+1));
+			totalChangeOverTime += changeOverTime;
+		}
+		
+		return totalChangeOverTime;
 	}
 	
-	//method calculates and returns the production time for a given sequence
-	public int getProductionTime(List<String> sequence) {
-		
-		int totalTime = 0;
-		int sequenceElements = sequence.size()-1;
-		//loop through each element and add the production time for that product and well as the change over time
-		//Stop looping before the last element since it will have no next element to get the change over time with
-		for(int i=0; i<=sequenceElements-1; i++) {
+	//Calculate the total time a production sequence takes by adding the time for each product
+	//to be made to the total change-over time of the sequence
+	public int getTotalProductionTime(List<String> sequence) {
+		int totalTime = getChangeOverTime(sequence);
+		for(int i=0; i<=sequence.size()-1; i++) {
 			totalTime+=timeToProduce.get(sequence.get(i));
-			int changeOverTime = changeOverMatrix.get(sequence.get(i)).get(sequence.get(i+1));
-			totalTime += changeOverTime;
 		}
-		//Add the last element's procution time that was missed above
-		totalTime+=timeToProduce.get(sequence.get(sequenceElements));
-		
 		return totalTime;
 	}
+	
 	
 	public void initializeTimeToProduceMatrix() {
 		
@@ -208,8 +230,4 @@ public class SequenceOptmizer{
 		changeOverMatrix.put("J", jHM);
 		
 	}
-	
-	
-	
-
 }
