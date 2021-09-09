@@ -22,12 +22,12 @@ public class Main {
 		sequence.add("E");
 		sequence.add("J");
 		
-		List<String> optimizedSequence = optimizer.makeSwaps(sequence);
+		ArrayList<String> optimizedSequence = optimizer.makeSwaps(sequence);
 		System.out.println("The optimized list order is: ");
 		for(String i : optimizedSequence) {
 			System.out.print(i);
 		}
 		System.out.println();
-		System.out.println("Production time of optimized sequence is: "+optimizer.getProductionTime(optimizedSequence));
+		System.out.println("Production time of optimized sequence is: "+optimizer.getTotalProductionTime(optimizedSequence));
 	}
 } 
